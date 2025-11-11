@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 군대 생활관 with Avatar</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 로딩 화면 -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <h2>3D 생활관 로딩 중...</h2>
+    </div>
+    
+    <!-- 조작법 안내 -->
+    <div id="controls">
+        <h3>조작법</h3>
+        <p><strong>WASD</strong>: 아바타 이동</p>
+        <p><strong>마우스 드래그</strong>: 카메라 회전</p>
+        <p><strong>휠</strong>: 줌</p>
+    </div>
+
+    <!-- 3D 캔버스 -->
+    <canvas id="canvas"></canvas>
+
+    <!-- Three.js 및 메인 스크립트 -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
