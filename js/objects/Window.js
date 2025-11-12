@@ -10,43 +10,58 @@ export class Window {
     }
 
     /**
-     * 창문 생성
+     * 창문 생성 (현실적인 유리 재질)
      * @param {number} x - X 좌표
      * @param {number} y - Y 좌표
      * @param {number} z - Z 좌표
      */
     create(x, y, z) {
         const windowGroup = new THREE.Group();
-        
-        // 유리창
+
+        // 유리창 (PBR 재질로 현실적인 유리 효과)
         const glassGeometry = new THREE.BoxGeometry(0.02, 1.8, 1.3);
-        const glassMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0x87CEFA,
+        const glassMaterial = new THREE.MeshStandardMaterial({
+            color: 0xE0F4FF,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.3,
+            roughness: 0.05,      // 매우 매끄러운 유리
+            metalness: 0.0,
+            envMapIntensity: 1.5,
+            transmission: 0.9,     // 빛 투과
+            thickness: 0.5
         });
         const glass = new THREE.Mesh(glassGeometry, glassMaterial);
+        glass.castShadow = false;
+        glass.receiveShadow = true;
         windowGroup.add(glass);
-        
-        // 창틀 재질
-        const frameMaterial = new THREE.MeshLambertMaterial({ color: 0xA0A0A0 });
-        
+
+        // 금속 창틀 재질
+        const frameMaterial = new THREE.MeshStandardMaterial({
+            color: 0x909090,
+            roughness: 0.3,
+            metalness: 0.8
+        });
+
         // 가로 창틀
         const horizontalDivider = new THREE.Mesh(
             new THREE.BoxGeometry(0.03, 0.04, 1.3),
             frameMaterial
         );
         horizontalDivider.position.y = 0;
+        horizontalDivider.castShadow = true;
+        horizontalDivider.receiveShadow = true;
         windowGroup.add(horizontalDivider);
-        
+
         // 세로 창틀
         const verticalDivider = new THREE.Mesh(
             new THREE.BoxGeometry(0.03, 1.8, 0.04),
             frameMaterial
         );
         verticalDivider.position.z = 0;
+        verticalDivider.castShadow = true;
+        verticalDivider.receiveShadow = true;
         windowGroup.add(verticalDivider);
-        
+
         windowGroup.position.set(x, y, z);
         windowGroup.rotation.y = Math.PI / 2;
         this.scene.add(windowGroup);
