@@ -18,17 +18,19 @@ export class Window {
     create(x, y, z) {
         const windowGroup = new THREE.Group();
 
-        // 유리창 (PBR 재질로 현실적인 유리 효과)
+        // 유리창 (PBR 재질로 현실적인 유리 효과 + 발광)
         const glassGeometry = new THREE.BoxGeometry(0.02, 1.8, 1.3);
         const glassMaterial = new THREE.MeshStandardMaterial({
-            color: 0xE0F4FF,
+            color: 0xFFFFFF,
             transparent: true,
-            opacity: 0.3,
+            opacity: 0.2,
             roughness: 0.05,      // 매우 매끄러운 유리
             metalness: 0.0,
             envMapIntensity: 1.5,
-            transmission: 0.9,     // 빛 투과
-            thickness: 0.5
+            transmission: 0.95,    // 높은 빛 투과
+            thickness: 0.5,
+            emissive: 0xFFFAE0,   // 햇빛이 통과하는 밝은 발광
+            emissiveIntensity: 0.8
         });
         const glass = new THREE.Mesh(glassGeometry, glassMaterial);
         glass.castShadow = false;
