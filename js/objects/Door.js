@@ -55,7 +55,7 @@ export class Door {
         doorGroup.add(doorframe);
 
         // 손잡이 (금속 재질)
-        const gripGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+        const gripGeometry = new THREE.SphereGeometry(0.3, 10, 10);
         const gripMaterial = new THREE.MeshStandardMaterial({
             color: 0xffb703,
             roughness: 0.2,
