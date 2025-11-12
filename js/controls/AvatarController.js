@@ -8,7 +8,7 @@ export class AvatarController {
         this.cameraController = cameraController;
         
         // 이동 속도
-        this.speed = 0.1;
+        this.speed = 0.3;
         
         // 키 입력 상태
         this.keys = {
