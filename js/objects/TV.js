@@ -3,45 +3,42 @@
  * 생활관 벽걸이 TV를 생성
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/loaders/GLTFLoader.js';
 
 export class TV {
     constructor(scene) {
         this.scene = scene;
+        this.loader = new GLTFLoader();
     }
 
     /**
-     * TV 생성 (플라스틱 프레임 + 스크린)
+     * TV 생성 (GLB 모델 사용)
      */
     create() {
-        const tvGroup = new THREE.Group();
+        this.loader.load(
+            'models/tv.glb',
+            (gltf) => {
+                const tvModel = gltf.scene;
 
-        // TV 프레임 (플라스틱 재질)
-        const frameGeometry = new THREE.BoxGeometry(3.3, 2, 0.05);
-        const frameMaterial = new THREE.MeshStandardMaterial({
-            color: 0x2F2F2F,
-            roughness: 0.5,
-            metalness: 0.1
-        });
-        const frame = new THREE.Mesh(frameGeometry, frameMaterial);
-        frame.castShadow = true;
-        frame.receiveShadow = true;
-        tvGroup.add(frame);
+                // 모델 위치 설정
+                tvModel.position.set(0, 4.5, 7.9);
 
-        // TV 화면 (약간 반사되는 검은 스크린)
-        const screenGeometry = new THREE.BoxGeometry(1.8, 1, 0.02);
-        const screenMaterial = new THREE.MeshStandardMaterial({
-            color: 0x0A0A0A,
-            roughness: 0.1,      // 반사되는 스크린
-            metalness: 0.3,
-            emissive: 0x001122,  // 꺼진 TV의 미세한 발광
-            emissiveIntensity: 0.1
-        });
-        const screen = new THREE.Mesh(screenGeometry, screenMaterial);
-        screen.position.z = 0.06;
-        screen.receiveShadow = true;
-        tvGroup.add(screen);
+                // 그림자 설정
+                tvModel.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
 
-        tvGroup.position.set(0, 4.5, 7.9);
-        this.scene.add(tvGroup);
+                this.scene.add(tvModel);
+            },
+            (progress) => {
+                console.log('TV loading: ' + (progress.loaded / progress.total * 100) + '%');
+            },
+            (error) => {
+                console.error('Error loading TV model:', error);
+            }
+        );
     }
 }
