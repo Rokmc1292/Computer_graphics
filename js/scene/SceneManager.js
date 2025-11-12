@@ -39,16 +39,33 @@ export class SceneManager {
     }
 
     /**
-     * 렌더러 초기화
+     * 렌더러 초기화 (PBR 최적화)
      */
     initRenderer() {
         this.renderer = new THREE.WebGLRenderer({
             canvas: document.getElementById('canvas'),
-            antialias: true
+            antialias: true,
+            powerPreference: 'high-performance'
         });
+
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));  // 고해상도 지원
+
+        // PBR을 위한 물리 기반 렌더링 설정
+        this.renderer.physicallyCorrectLights = true;
+
+        // 톤 매핑 (현실적인 밝기 표현)
+        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.toneMappingExposure = 1.0;
+
+        // 출력 색상 공간 설정
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
+
+        // 향상된 그림자 설정
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // 배경색
         this.renderer.setClearColor(0xF5F5F5);
     }
 
