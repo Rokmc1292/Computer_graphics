@@ -26,43 +26,41 @@ class App {
     async init() {
         // 씬 매니저 생성
         this.sceneManager = new SceneManager();
-        
+
         // 조명 설정
         this.lightManager = new LightManager(this.sceneManager.scene);
         this.lightManager.setupLights();
-        
-        // 생활관 건물 생성 (비동기)
+
+        // 생활관 건물 생성 (비동기 - 모든 모델 로딩 완료까지 대기)
         this.barracks = new Barracks(this.sceneManager.scene);
         await this.barracks.create();
-        
+
         // 아바타 생성
         this.avatar = new Avatar(this.sceneManager.scene);
         this.avatar.create();
-        
+
         // 카메라 컨트롤러 생성
         this.cameraController = new CameraController(
             this.sceneManager.camera,
             this.sceneManager.renderer.domElement,
             this.avatar
         );
-        
+
         // 아바타 컨트롤러 생성
         this.avatarController = new AvatarController(
             this.avatar,
             this.cameraController
         );
-        
+
         // 애니메이션 시작
         this.animate();
-        
-        // 로딩 화면 숨기기
-        setTimeout(() => {
-            const loadingElement = document.getElementById('loading');
-            if (loadingElement) {
-                loadingElement.classList.add('hidden');
-            }
-        }, 2000); // 체스터 로딩 시간을 고려하여 2초로 변경
-        
+
+        // 모든 모델이 로드되었으므로 로딩 화면 숨기기
+        const loadingElement = document.getElementById('loading');
+        if (loadingElement) {
+            loadingElement.classList.add('hidden');
+        }
+
         console.log('3D 군대 생활관과 아바타가 로드되었습니다!');
     }
 

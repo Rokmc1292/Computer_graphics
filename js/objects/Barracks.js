@@ -26,9 +26,9 @@ export class Barracks {
         this.createBunkBeds();
         this.createLockers();
         await this.createChesters(); // 비동기로 체스터 생성
-        this.createWindows();
-        this.createTV();
-        this.createDoor();
+        await this.createWindows(); // 비동기로 창문 생성
+        await this.createTV(); // 비동기로 TV 생성
+        await this.createDoor(); // 비동기로 문 생성
         this.createCeilingLights();
     }
 
@@ -267,7 +267,7 @@ export class Barracks {
     /**
      * 창문 배치
      */
-    createWindows() {
+    async createWindows() {
         const positions = [
             [4, 5, 7.9],
             [7, 5, 7.9],
@@ -275,26 +275,32 @@ export class Barracks {
             [-7, 5, 7.9]
         ];
 
-        positions.forEach(pos => {
+        // 모든 창문이 로드될 때까지 기다림
+        const promises = positions.map(pos => {
             const window = new Window(this.scene);
-            window.create(...pos);
+            return window.create(...pos);
         });
+
+        await Promise.all(promises);
+        console.log('창문 배치 완료!');
     }
 
     /**
      * TV 생성
      */
-    createTV() {
+    async createTV() {
         const tv = new TV(this.scene);
-        tv.create();
+        await tv.create();
+        console.log('TV 배치 완료!');
     }
 
     /**
      * 출입문 생성
      */
-    createDoor() {
+    async createDoor() {
         const door = new Door(this.scene);
-        door.create();
+        await door.create();
+        console.log('출입문 배치 완료!');
     }
 
     /**
