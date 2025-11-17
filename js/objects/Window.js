@@ -16,33 +16,38 @@ export class Window {
      * @param {number} x - X 좌표
      * @param {number} y - Y 좌표
      * @param {number} z - Z 좌표
+     * @returns {Promise} 모델 로딩 완료 Promise
      */
     create(x, y, z) {
-        this.loader.load(
-            'models/window.glb',
-            (gltf) => {
-                const windowModel = gltf.scene;
+        return new Promise((resolve, reject) => {
+            this.loader.load(
+                'models/window.glb',
+                (gltf) => {
+                    const windowModel = gltf.scene;
 
-                // 모델 위치 설정
-                windowModel.position.set(x, y, z);
-                windowModel.rotation.y = Math.PI / 2;
+                    // 모델 위치 설정
+                    windowModel.position.set(x, y, z);
+                    windowModel.rotation.y = Math.PI / 2;
 
-                // 그림자 설정
-                windowModel.traverse((child) => {
-                    if (child.isMesh) {
-                        child.castShadow = false;
-                        child.receiveShadow = true;
-                    }
-                });
+                    // 그림자 설정
+                    windowModel.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = false;
+                            child.receiveShadow = true;
+                        }
+                    });
 
-                this.scene.add(windowModel);
-            },
-            (progress) => {
-                console.log('Window loading: ' + (progress.loaded / progress.total * 100) + '%');
-            },
-            (error) => {
-                console.error('Error loading window model:', error);
-            }
-        );
+                    this.scene.add(windowModel);
+                    resolve();
+                },
+                (progress) => {
+                    console.log('Window loading: ' + (progress.loaded / progress.total * 100) + '%');
+                },
+                (error) => {
+                    console.error('Error loading window model:', error);
+                    reject(error);
+                }
+            );
+        });
     }
 }
