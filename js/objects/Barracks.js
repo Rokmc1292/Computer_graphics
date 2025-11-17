@@ -41,14 +41,55 @@ export class Barracks {
     }
 
     /**
-     * 모든 텍스처 로드
+     * 모든 텍스처 로드 (에러에 안전한 버전)
      */
     async loadTextures() {
-        console.log('텍스처 로딩 시작...');
-        this.wallTextures = await this.textureLoader.loadWallTextures();
-        this.floorTextures = await this.textureLoader.loadFloorTextures();
-        this.bedTextures = await this.textureLoader.loadBedTextures();
-        console.log('모든 텍스처 로딩 완료!');
+        console.log('=== 텍스처 로딩 시작 ===');
+
+        try {
+            // 벽 텍스처 로드
+            try {
+                this.wallTextures = await this.textureLoader.loadWallTextures();
+                if (this.wallTextures) {
+                    console.log('✓ 벽 텍스처 로딩 성공');
+                } else {
+                    console.warn('⚠ 벽 텍스처 로딩 실패 - 기본 재질 사용');
+                }
+            } catch (error) {
+                console.error('✗ 벽 텍스처 로딩 중 오류:', error);
+                this.wallTextures = null;
+            }
+
+            // 바닥 텍스처 로드
+            try {
+                this.floorTextures = await this.textureLoader.loadFloorTextures();
+                if (this.floorTextures) {
+                    console.log('✓ 바닥 텍스처 로딩 성공');
+                } else {
+                    console.warn('⚠ 바닥 텍스처 로딩 실패 - 기본 재질 사용');
+                }
+            } catch (error) {
+                console.error('✗ 바닥 텍스처 로딩 중 오류:', error);
+                this.floorTextures = null;
+            }
+
+            // 침대 텍스처 로드
+            try {
+                this.bedTextures = await this.textureLoader.loadBedTextures();
+                if (this.bedTextures) {
+                    console.log('✓ 침대 텍스처 로딩 성공');
+                } else {
+                    console.warn('⚠ 침대 텍스처 로딩 실패 - 기본 재질 사용');
+                }
+            } catch (error) {
+                console.error('✗ 침대 텍스처 로딩 중 오류:', error);
+                this.bedTextures = null;
+            }
+
+            console.log('=== 텍스처 로딩 완료 ===');
+        } catch (error) {
+            console.error('텍스처 로딩 중 예상치 못한 오류:', error);
+        }
     }
 
     /**
@@ -56,9 +97,10 @@ export class Barracks {
      */
     createFloor() {
         const geometry = new THREE.PlaneGeometry(20, 16);
+        let material;
 
         // 로드된 대리석 텍스처 사용
-        if (this.floorTextures) {
+        if (this.floorTextures && this.floorTextures.diffuse) {
             // 텍스처 반복 설정
             if (this.floorTextures.diffuse) {
                 this.floorTextures.diffuse.repeat.set(4, 3);
@@ -71,7 +113,7 @@ export class Barracks {
             }
 
             // PBR 재질 적용
-            const material = new THREE.MeshStandardMaterial({
+            material = new THREE.MeshStandardMaterial({
                 map: this.floorTextures.diffuse,
                 normalMap: this.floorTextures.normal,
                 roughnessMap: this.floorTextures.roughness,
@@ -80,21 +122,31 @@ export class Barracks {
                 envMapIntensity: 0.5
             });
 
-            const floor = new THREE.Mesh(geometry, material);
-            floor.rotation.x = -Math.PI / 2;
-            floor.receiveShadow = true;
-            this.scene.add(floor);
-
             console.log('대리석 바닥 텍스처 적용 완료');
+        } else {
+            // 폴백: 기본 재질
+            material = new THREE.MeshStandardMaterial({
+                color: 0xE8E8E8,
+                roughness: 0.8,
+                metalness: 0.0
+            });
+            console.log('바닥에 기본 재질 적용 (텍스처 없음)');
         }
+
+        const floor = new THREE.Mesh(geometry, material);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        this.scene.add(floor);
     }
 
     /**
      * 벽 생성 (PBR 재질 + 콘크리트 벽 텍스처)
      */
     createWalls() {
+        let material;
+
         // 로드된 콘크리트 벽 텍스처 사용
-        if (this.wallTextures) {
+        if (this.wallTextures && this.wallTextures.diffuse) {
             // 텍스처 반복 설정
             if (this.wallTextures.diffuse) {
                 this.wallTextures.diffuse.repeat.set(3, 2);
@@ -106,7 +158,7 @@ export class Barracks {
                 this.wallTextures.roughness.repeat.set(3, 2);
             }
 
-            const material = new THREE.MeshStandardMaterial({
+            material = new THREE.MeshStandardMaterial({
                 map: this.wallTextures.diffuse,
                 normalMap: this.wallTextures.normal,
                 roughnessMap: this.wallTextures.roughness,
@@ -115,51 +167,60 @@ export class Barracks {
                 side: THREE.DoubleSide
             });
 
-            // 앞벽
-            const frontWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(20, 8),
-                material
-            );
-            frontWall.position.set(0, 4, 8);
-            frontWall.receiveShadow = true;
-            frontWall.castShadow = true;
-            this.scene.add(frontWall);
-
-            // 뒷벽
-            const backWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(20, 8),
-                material
-            );
-            backWall.position.set(0, 4, -8);
-            backWall.rotation.y = Math.PI;
-            backWall.receiveShadow = true;
-            backWall.castShadow = true;
-            this.scene.add(backWall);
-
-            // 왼쪽 벽
-            const leftWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(16, 8),
-                material
-            );
-            leftWall.position.set(-10, 4, 0);
-            leftWall.rotation.y = Math.PI / 2;
-            leftWall.receiveShadow = true;
-            leftWall.castShadow = true;
-            this.scene.add(leftWall);
-
-            // 오른쪽 벽
-            const rightWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(16, 8),
-                material
-            );
-            rightWall.position.set(10, 4, 0);
-            rightWall.rotation.y = -Math.PI / 2;
-            rightWall.receiveShadow = true;
-            rightWall.castShadow = true;
-            this.scene.add(rightWall);
-
             console.log('콘크리트 벽 텍스처 적용 완료');
+        } else {
+            // 폴백: 기본 재질
+            material = new THREE.MeshStandardMaterial({
+                color: 0xF5F5F5,
+                roughness: 0.9,
+                metalness: 0.0,
+                side: THREE.DoubleSide
+            });
+            console.log('벽에 기본 재질 적용 (텍스처 없음)');
         }
+
+        // 앞벽
+        const frontWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(20, 8),
+            material
+        );
+        frontWall.position.set(0, 4, 8);
+        frontWall.receiveShadow = true;
+        frontWall.castShadow = true;
+        this.scene.add(frontWall);
+
+        // 뒷벽
+        const backWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(20, 8),
+            material
+        );
+        backWall.position.set(0, 4, -8);
+        backWall.rotation.y = Math.PI;
+        backWall.receiveShadow = true;
+        backWall.castShadow = true;
+        this.scene.add(backWall);
+
+        // 왼쪽 벽
+        const leftWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(16, 8),
+            material
+        );
+        leftWall.position.set(-10, 4, 0);
+        leftWall.rotation.y = Math.PI / 2;
+        leftWall.receiveShadow = true;
+        leftWall.castShadow = true;
+        this.scene.add(leftWall);
+
+        // 오른쪽 벽
+        const rightWall = new THREE.Mesh(
+            new THREE.PlaneGeometry(16, 8),
+            material
+        );
+        rightWall.position.set(10, 4, 0);
+        rightWall.rotation.y = -Math.PI / 2;
+        rightWall.receiveShadow = true;
+        rightWall.castShadow = true;
+        this.scene.add(rightWall);
     }
 
     /**
