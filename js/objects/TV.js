@@ -13,32 +13,37 @@ export class TV {
 
     /**
      * TV 생성 (GLB 모델 사용)
+     * @returns {Promise} 모델 로딩 완료 Promise
      */
     create() {
-        this.loader.load(
-            'models/tv.glb',
-            (gltf) => {
-                const tvModel = gltf.scene;
+        return new Promise((resolve, reject) => {
+            this.loader.load(
+                'models/tv.glb',
+                (gltf) => {
+                    const tvModel = gltf.scene;
 
-                // 모델 위치 설정
-                tvModel.position.set(0, 4.5, 7.9);
+                    // 모델 위치 설정
+                    tvModel.position.set(0, 4.5, 7.9);
 
-                // 그림자 설정
-                tvModel.traverse((child) => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                    }
-                });
+                    // 그림자 설정
+                    tvModel.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
 
-                this.scene.add(tvModel);
-            },
-            (progress) => {
-                console.log('TV loading: ' + (progress.loaded / progress.total * 100) + '%');
-            },
-            (error) => {
-                console.error('Error loading TV model:', error);
-            }
-        );
+                    this.scene.add(tvModel);
+                    resolve();
+                },
+                (progress) => {
+                    console.log('TV loading: ' + (progress.loaded / progress.total * 100) + '%');
+                },
+                (error) => {
+                    console.error('Error loading TV model:', error);
+                    reject(error);
+                }
+            );
+        });
     }
 }
