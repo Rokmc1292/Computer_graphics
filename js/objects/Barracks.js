@@ -9,21 +9,29 @@ import { Chester } from './Chester.js';
 import { Window } from './Window.js';
 import { TV } from './TV.js';
 import { Door } from './Door.js';
+import { TextureLoaderUtil } from '../loaders/TextureLoader.js';
 
 export class Barracks {
     constructor(scene) {
         this.scene = scene;
         this.chester = new Chester(scene); // 체스터 추가
+        this.textureLoader = new TextureLoaderUtil();
+        this.wallTextures = null;
+        this.floorTextures = null;
+        this.bedTextures = null;
     }
 
     /**
      * 생활관 전체 생성
      */
     async create() {
+        // 텍스처 먼저 로드
+        await this.loadTextures();
+
         this.createFloor();
         this.createWalls();
         this.createCeiling();
-        this.createBunkBeds();
+        await this.createBunkBeds(); // 비동기로 변경 (침대 텍스처 전달)
         this.createLockers();
         await this.createChesters(); // 비동기로 체스터 생성
         await this.createWindows(); // 비동기로 창문 생성
@@ -33,146 +41,125 @@ export class Barracks {
     }
 
     /**
-     * 바닥 생성 (PBR 재질 + 텍스처)
+     * 모든 텍스처 로드
+     */
+    async loadTextures() {
+        console.log('텍스처 로딩 시작...');
+        this.wallTextures = await this.textureLoader.loadWallTextures();
+        this.floorTextures = await this.textureLoader.loadFloorTextures();
+        this.bedTextures = await this.textureLoader.loadBedTextures();
+        console.log('모든 텍스처 로딩 완료!');
+    }
+
+    /**
+     * 바닥 생성 (PBR 재질 + 대리석 텍스처)
      */
     createFloor() {
         const geometry = new THREE.PlaneGeometry(20, 16);
 
-        // 절차적 타일 텍스처 생성
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-
-        // 타일 패턴
-        const tileSize = 64;
-        for (let y = 0; y < canvas.height; y += tileSize) {
-            for (let x = 0; x < canvas.width; x += tileSize) {
-                // 밝은 회색 타일
-                ctx.fillStyle = '#E8E8E8';
-                ctx.fillRect(x, y, tileSize, tileSize);
-
-                // 어두운 그라우트 선
-                ctx.strokeStyle = '#CCCCCC';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(x, y, tileSize, tileSize);
-
-                // 미세한 노이즈로 사실감 추가
-                for (let i = 0; i < 20; i++) {
-                    const nx = x + Math.random() * tileSize;
-                    const ny = y + Math.random() * tileSize;
-                    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.02})`;
-                    ctx.fillRect(nx, ny, 1, 1);
-                }
+        // 로드된 대리석 텍스처 사용
+        if (this.floorTextures) {
+            // 텍스처 반복 설정
+            if (this.floorTextures.diffuse) {
+                this.floorTextures.diffuse.repeat.set(4, 3);
             }
+            if (this.floorTextures.normal) {
+                this.floorTextures.normal.repeat.set(4, 3);
+            }
+            if (this.floorTextures.roughness) {
+                this.floorTextures.roughness.repeat.set(4, 3);
+            }
+
+            // PBR 재질 적용
+            const material = new THREE.MeshStandardMaterial({
+                map: this.floorTextures.diffuse,
+                normalMap: this.floorTextures.normal,
+                roughnessMap: this.floorTextures.roughness,
+                roughness: 0.6,  // 대리석의 약간 매끄러운 표면
+                metalness: 0.1,  // 대리석의 미세한 광택
+                envMapIntensity: 0.5
+            });
+
+            const floor = new THREE.Mesh(geometry, material);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            this.scene.add(floor);
+
+            console.log('대리석 바닥 텍스처 적용 완료');
         }
-
-        const floorTexture = new THREE.CanvasTexture(canvas);
-        floorTexture.wrapS = THREE.RepeatWrapping;
-        floorTexture.wrapT = THREE.RepeatWrapping;
-        floorTexture.repeat.set(4, 3);
-
-        // PBR 재질 적용
-        const material = new THREE.MeshStandardMaterial({
-            map: floorTexture,
-            roughness: 0.8,  // 약간 거친 표면
-            metalness: 0.0,  // 비금속
-            envMapIntensity: 0.3
-        });
-
-        const floor = new THREE.Mesh(geometry, material);
-        floor.rotation.x = -Math.PI / 2;
-        floor.receiveShadow = true;
-        this.scene.add(floor);
     }
 
     /**
-     * 벽 생성 (PBR 재질 + 벽지 텍스처)
+     * 벽 생성 (PBR 재질 + 콘크리트 벽 텍스처)
      */
     createWalls() {
-        // 벽지 텍스처 생성
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
+        // 로드된 콘크리트 벽 텍스처 사용
+        if (this.wallTextures) {
+            // 텍스처 반복 설정
+            if (this.wallTextures.diffuse) {
+                this.wallTextures.diffuse.repeat.set(3, 2);
+            }
+            if (this.wallTextures.normal) {
+                this.wallTextures.normal.repeat.set(3, 2);
+            }
+            if (this.wallTextures.roughness) {
+                this.wallTextures.roughness.repeat.set(3, 2);
+            }
 
-        // 베이스 색상
-        ctx.fillStyle = '#F5F5F5';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const material = new THREE.MeshStandardMaterial({
+                map: this.wallTextures.diffuse,
+                normalMap: this.wallTextures.normal,
+                roughnessMap: this.wallTextures.roughness,
+                roughness: 0.9,   // 거친 콘크리트 표면
+                metalness: 0.0,   // 비금속
+                side: THREE.DoubleSide
+            });
 
-        // 미세한 텍스처 패턴
-        for (let i = 0; i < 1000; i++) {
-            const x = Math.random() * canvas.width;
-            const y = Math.random() * canvas.height;
-            const gray = 240 + Math.random() * 10;
-            ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
-            ctx.fillRect(x, y, 1, 1);
+            // 앞벽
+            const frontWall = new THREE.Mesh(
+                new THREE.PlaneGeometry(20, 8),
+                material
+            );
+            frontWall.position.set(0, 4, 8);
+            frontWall.receiveShadow = true;
+            frontWall.castShadow = true;
+            this.scene.add(frontWall);
+
+            // 뒷벽
+            const backWall = new THREE.Mesh(
+                new THREE.PlaneGeometry(20, 8),
+                material
+            );
+            backWall.position.set(0, 4, -8);
+            backWall.rotation.y = Math.PI;
+            backWall.receiveShadow = true;
+            backWall.castShadow = true;
+            this.scene.add(backWall);
+
+            // 왼쪽 벽
+            const leftWall = new THREE.Mesh(
+                new THREE.PlaneGeometry(16, 8),
+                material
+            );
+            leftWall.position.set(-10, 4, 0);
+            leftWall.rotation.y = Math.PI / 2;
+            leftWall.receiveShadow = true;
+            leftWall.castShadow = true;
+            this.scene.add(leftWall);
+
+            // 오른쪽 벽
+            const rightWall = new THREE.Mesh(
+                new THREE.PlaneGeometry(16, 8),
+                material
+            );
+            rightWall.position.set(10, 4, 0);
+            rightWall.rotation.y = -Math.PI / 2;
+            rightWall.receiveShadow = true;
+            rightWall.castShadow = true;
+            this.scene.add(rightWall);
+
+            console.log('콘크리트 벽 텍스처 적용 완료');
         }
-
-        // 수직 라인 패턴 (벽지 효과)
-        ctx.strokeStyle = 'rgba(0,0,0,0.015)';
-        ctx.lineWidth = 1;
-        for (let x = 0; x < canvas.width; x += 20) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
-            ctx.stroke();
-        }
-
-        const wallTexture = new THREE.CanvasTexture(canvas);
-        wallTexture.wrapS = THREE.RepeatWrapping;
-        wallTexture.wrapT = THREE.RepeatWrapping;
-        wallTexture.repeat.set(3, 2);
-
-        const material = new THREE.MeshStandardMaterial({
-            map: wallTexture,
-            roughness: 0.9,   // 매우 거친 표면 (매트한 벽지)
-            metalness: 0.0,   // 비금속
-            side: THREE.DoubleSide
-        });
-
-        // 앞벽
-        const frontWall = new THREE.Mesh(
-            new THREE.PlaneGeometry(20, 8),
-            material
-        );
-        frontWall.position.set(0, 4, 8);
-        frontWall.receiveShadow = true;
-        frontWall.castShadow = true;
-        this.scene.add(frontWall);
-
-        // 뒷벽
-        const backWall = new THREE.Mesh(
-            new THREE.PlaneGeometry(20, 8),
-            material
-        );
-        backWall.position.set(0, 4, -8);
-        backWall.rotation.y = Math.PI;
-        backWall.receiveShadow = true;
-        backWall.castShadow = true;
-        this.scene.add(backWall);
-
-        // 왼쪽 벽
-        const leftWall = new THREE.Mesh(
-            new THREE.PlaneGeometry(16, 8),
-            material
-        );
-        leftWall.position.set(-10, 4, 0);
-        leftWall.rotation.y = Math.PI / 2;
-        leftWall.receiveShadow = true;
-        leftWall.castShadow = true;
-        this.scene.add(leftWall);
-
-        // 오른쪽 벽
-        const rightWall = new THREE.Mesh(
-            new THREE.PlaneGeometry(16, 8),
-            material
-        );
-        rightWall.position.set(10, 4, 0);
-        rightWall.rotation.y = -Math.PI / 2;
-        rightWall.receiveShadow = true;
-        rightWall.castShadow = true;
-        this.scene.add(rightWall);
     }
 
     /**
@@ -218,9 +205,9 @@ export class Barracks {
     }
 
     /**
-     * 2층 침대 배치
+     * 2층 침대 배치 (침대 텍스처 전달)
      */
-    createBunkBeds() {
+    async createBunkBeds() {
         const positions = [
             [-7.9, 0, -4],
             [-7.9, 0, 0],
@@ -231,9 +218,11 @@ export class Barracks {
         ];
 
         positions.forEach(pos => {
-            const bed = new BunkBed(this.scene);
+            const bed = new BunkBed(this.scene, this.bedTextures);
             bed.create(...pos);
         });
+
+        console.log('침대 텍스처 적용 완료');
     }
 
     /**

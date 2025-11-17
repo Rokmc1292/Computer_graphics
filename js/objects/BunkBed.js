@@ -5,8 +5,9 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
 
 export class BunkBed {
-    constructor(scene) {
+    constructor(scene, bedTextures = null) {
         this.scene = scene;
+        this.bedTextures = bedTextures;
     }
 
     /**
@@ -145,41 +146,73 @@ export class BunkBed {
     }
 
     /**
-     * 이불 생성 (천 재질 + 텍스처)
+     * 이불 생성 (리넨 천 재질 + 텍스처)
      */
     createBedding(group, x) {
-        // 이불 텍스처 (천 질감)
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 256;
-        const ctx = canvas.getContext('2d');
+        let material;
 
-        // 파란색 베이스
-        ctx.fillStyle = '#1C6EA4';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // 로드된 침대 텍스처가 있으면 사용
+        if (this.bedTextures && this.bedTextures.diffuse) {
+            // 텍스처 복제 및 반복 설정
+            const diffuseClone = this.bedTextures.diffuse.clone();
+            diffuseClone.repeat.set(2, 1);
+            diffuseClone.needsUpdate = true;
 
-        // 천 주름 패턴
-        for (let y = 0; y < canvas.height; y += 4) {
-            const darkness = Math.sin(y * 0.1) * 10;
-            ctx.strokeStyle = `rgba(0, 0, 0, ${Math.abs(darkness) * 0.02})`;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(canvas.width, y);
-            ctx.stroke();
+            let normalClone = null;
+            let armClone = null;
+
+            if (this.bedTextures.normal) {
+                normalClone = this.bedTextures.normal.clone();
+                normalClone.repeat.set(2, 1);
+                normalClone.needsUpdate = true;
+            }
+
+            if (this.bedTextures.arm) {
+                armClone = this.bedTextures.arm.clone();
+                armClone.repeat.set(2, 1);
+                armClone.needsUpdate = true;
+            }
+
+            material = new THREE.MeshStandardMaterial({
+                map: diffuseClone,
+                normalMap: normalClone,
+                aoMap: armClone,
+                roughnessMap: armClone,
+                roughness: 0.95,
+                metalness: 0.0
+            });
+        } else {
+            // 기본 파란색 이불 (폴백)
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#1C6EA4';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let y = 0; y < canvas.height; y += 4) {
+                const darkness = Math.sin(y * 0.1) * 10;
+                ctx.strokeStyle = `rgba(0, 0, 0, ${Math.abs(darkness) * 0.02})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            const beddingTexture = new THREE.CanvasTexture(canvas);
+            beddingTexture.wrapS = THREE.RepeatWrapping;
+            beddingTexture.wrapT = THREE.RepeatWrapping;
+            beddingTexture.repeat.set(2, 1);
+
+            material = new THREE.MeshStandardMaterial({
+                map: beddingTexture,
+                color: 0x1C6EA4,
+                roughness: 0.9,
+                metalness: 0.0
+            });
         }
-
-        const beddingTexture = new THREE.CanvasTexture(canvas);
-        beddingTexture.wrapS = THREE.RepeatWrapping;
-        beddingTexture.wrapT = THREE.RepeatWrapping;
-        beddingTexture.repeat.set(2, 1);
-
-        const material = new THREE.MeshStandardMaterial({
-            map: beddingTexture,
-            color: 0x1C6EA4,
-            roughness: 0.9,
-            metalness: 0.0
-        });
 
         const offsetX = x >= 0 ? -0.5 : 0.5;
 
@@ -196,7 +229,7 @@ export class BunkBed {
         // 위층 이불
         const upperBedding = new THREE.Mesh(
             new THREE.BoxGeometry(3, 0.1, 1.7),
-            material
+            material.clone()
         );
         upperBedding.position.set(offsetX, 2.4, 0);
         upperBedding.castShadow = true;
@@ -205,14 +238,49 @@ export class BunkBed {
     }
 
     /**
-     * 베개 생성 (부드러운 천 재질)
+     * 베개 생성 (리넨 천 재질 + 텍스처)
      */
     createPillows(group, x) {
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x1C6EA4,
-            roughness: 0.85,
-            metalness: 0.0
-        });
+        let material;
+
+        // 로드된 침대 텍스처가 있으면 사용
+        if (this.bedTextures && this.bedTextures.diffuse) {
+            // 텍스처 복제 및 반복 설정
+            const diffuseClone = this.bedTextures.diffuse.clone();
+            diffuseClone.repeat.set(1, 1);
+            diffuseClone.needsUpdate = true;
+
+            let normalClone = null;
+            let armClone = null;
+
+            if (this.bedTextures.normal) {
+                normalClone = this.bedTextures.normal.clone();
+                normalClone.repeat.set(1, 1);
+                normalClone.needsUpdate = true;
+            }
+
+            if (this.bedTextures.arm) {
+                armClone = this.bedTextures.arm.clone();
+                armClone.repeat.set(1, 1);
+                armClone.needsUpdate = true;
+            }
+
+            material = new THREE.MeshStandardMaterial({
+                map: diffuseClone,
+                normalMap: normalClone,
+                aoMap: armClone,
+                roughnessMap: armClone,
+                roughness: 0.9,
+                metalness: 0.0
+            });
+        } else {
+            // 기본 파란색 베개 (폴백)
+            material = new THREE.MeshStandardMaterial({
+                color: 0x1C6EA4,
+                roughness: 0.85,
+                metalness: 0.0
+            });
+        }
 
         const offsetX = x >= 0 ? 1.5 : -1.5;
 
@@ -229,7 +297,7 @@ export class BunkBed {
         // 위층 베개
         const upperPillow = new THREE.Mesh(
             new THREE.BoxGeometry(0.5, 0.1, 0.8),
-            material
+            material.clone()
         );
         upperPillow.position.set(offsetX, 2.4, 0);
         upperPillow.castShadow = true;
