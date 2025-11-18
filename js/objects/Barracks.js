@@ -16,7 +16,6 @@ export class Barracks {
         this.scene = scene;
         this.chester = new Chester(scene); // 체스터 추가
         this.textureLoader = new TextureLoaderUtil();
-        this.wallTextures = null;
         this.floorTextures = null;
         this.bedTextures = null;
     }
@@ -71,19 +70,6 @@ export class Barracks {
         console.log('=== 텍스처 로딩 시작 ===');
 
         try {
-            // 벽 텍스처 로드
-            try {
-                this.wallTextures = await this.textureLoader.loadWallTextures();
-                if (this.wallTextures) {
-                    console.log('✓ 벽 텍스처 로딩 성공');
-                } else {
-                    console.warn('⚠ 벽 텍스처 로딩 실패 - 기본 재질 사용');
-                }
-            } catch (error) {
-                console.error('✗ 벽 텍스처 로딩 중 오류:', error);
-                this.wallTextures = null;
-            }
-
             // 바닥 텍스처 로드
             try {
                 this.floorTextures = await this.textureLoader.loadFloorTextures();
@@ -164,44 +150,15 @@ export class Barracks {
     }
 
     /**
-     * 벽 생성 (PBR 재질 + 콘크리트 벽 텍스처)
+     * 벽 생성 (기본 재질)
      */
     createWalls() {
-        let material;
-
-        // 로드된 콘크리트 벽 텍스처 사용
-        if (this.wallTextures && this.wallTextures.diffuse) {
-            // 텍스처 반복 설정
-            if (this.wallTextures.diffuse) {
-                this.wallTextures.diffuse.repeat.set(3, 2);
-            }
-            if (this.wallTextures.normal) {
-                this.wallTextures.normal.repeat.set(3, 2);
-            }
-            if (this.wallTextures.roughness) {
-                this.wallTextures.roughness.repeat.set(3, 2);
-            }
-
-            material = new THREE.MeshStandardMaterial({
-                map: this.wallTextures.diffuse,
-                normalMap: this.wallTextures.normal,
-                roughnessMap: this.wallTextures.roughness,
-                roughness: 0.9,   // 거친 콘크리트 표면
-                metalness: 0.0,   // 비금속
-                side: THREE.DoubleSide
-            });
-
-            console.log('콘크리트 벽 텍스처 적용 완료');
-        } else {
-            // 폴백: 기본 재질
-            material = new THREE.MeshStandardMaterial({
-                color: 0xF5F5F5,
-                roughness: 0.9,
-                metalness: 0.0,
-                side: THREE.DoubleSide
-            });
-            console.log('벽에 기본 재질 적용 (텍스처 없음)');
-        }
+        const material = new THREE.MeshStandardMaterial({
+            color: 0xF5F5F5,
+            roughness: 0.9,
+            metalness: 0.0,
+            side: THREE.DoubleSide
+        });
 
         // 앞벽
         const frontWall = new THREE.Mesh(
