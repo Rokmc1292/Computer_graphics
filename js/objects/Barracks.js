@@ -25,19 +25,43 @@ export class Barracks {
      * 생활관 전체 생성
      */
     async create() {
-        // 텍스처 먼저 로드
-        await this.loadTextures();
+        try {
+            console.log('>>> Barracks.create() 시작');
 
-        this.createFloor();
-        this.createWalls();
-        this.createCeiling();
-        await this.createBunkBeds(); // 비동기로 변경 (침대 텍스처 전달)
-        this.createLockers();
-        await this.createChesters(); // 비동기로 체스터 생성
-        await this.createWindows(); // 비동기로 창문 생성
-        await this.createTV(); // 비동기로 TV 생성
-        await this.createDoor(); // 비동기로 문 생성
-        this.createCeilingLights();
+            // 텍스처 먼저 로드
+            console.log('>>> 텍스처 로드 시작...');
+            await this.loadTextures();
+            console.log('>>> 텍스처 로드 완료');
+
+            console.log('>>> 바닥 생성 중...');
+            this.createFloor();
+            console.log('>>> 벽 생성 중...');
+            this.createWalls();
+            console.log('>>> 천장 생성 중...');
+            this.createCeiling();
+
+            console.log('>>> 침대 생성 중...');
+            await this.createBunkBeds(); // 비동기로 변경 (침대 텍스처 전달)
+            console.log('>>> 사물함 생성 중...');
+            this.createLockers();
+
+            console.log('>>> 체스터 생성 중...');
+            await this.createChesters(); // 비동기로 체스터 생성
+            console.log('>>> 창문 생성 중...');
+            await this.createWindows(); // 비동기로 창문 생성
+            console.log('>>> TV 생성 중...');
+            await this.createTV(); // 비동기로 TV 생성
+            console.log('>>> 문 생성 중...');
+            await this.createDoor(); // 비동기로 문 생성
+
+            console.log('>>> 천장 조명 생성 중...');
+            this.createCeilingLights();
+
+            console.log('>>> Barracks.create() 완료');
+        } catch (error) {
+            console.error('❌ Barracks 생성 중 오류:', error);
+            throw error; // 상위로 에러 전파
+        }
     }
 
     /**

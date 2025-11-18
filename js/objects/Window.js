@@ -20,32 +20,57 @@ export class Window {
      */
     create(x, y, z) {
         return new Promise((resolve, reject) => {
+            let isResolved = false;
+            const timeout = 30000; // 30초 타임아웃
+
+            // 타임아웃 설정
+            const timeoutId = setTimeout(() => {
+                if (!isResolved) {
+                    isResolved = true;
+                    console.warn(`⚠️ 창문 모델 로딩 타임아웃 (${x}, ${y}, ${z})`);
+                    resolve(); // reject 대신 resolve로 계속 진행
+                }
+            }, timeout);
+
             this.loader.load(
                 'models/window.glb',
                 (gltf) => {
-                    const windowModel = gltf.scene;
+                    if (!isResolved) {
+                        isResolved = true;
+                        clearTimeout(timeoutId);
 
-                    // 모델 위치 설정
-                    windowModel.position.set(x, y, z);
-                    windowModel.rotation.y = Math.PI / 2;
+                        const windowModel = gltf.scene;
 
-                    // 그림자 설정
-                    windowModel.traverse((child) => {
-                        if (child.isMesh) {
-                            child.castShadow = false;
-                            child.receiveShadow = true;
-                        }
-                    });
+                        // 모델 위치 설정
+                        windowModel.position.set(x, y, z);
+                        windowModel.rotation.y = Math.PI / 2;
 
-                    this.scene.add(windowModel);
-                    resolve();
+                        // 그림자 설정
+                        windowModel.traverse((child) => {
+                            if (child.isMesh) {
+                                child.castShadow = false;
+                                child.receiveShadow = true;
+                            }
+                        });
+
+                        this.scene.add(windowModel);
+                        console.log(`✓ 창문 로드 완료 (${x}, ${y}, ${z})`);
+                        resolve();
+                    }
                 },
                 (progress) => {
-                    console.log('Window loading: ' + (progress.loaded / progress.total * 100) + '%');
+                    if (progress.lengthComputable) {
+                        const percent = (progress.loaded / progress.total * 100).toFixed(0);
+                        console.log(`창문 로딩: ${percent}%`);
+                    }
                 },
                 (error) => {
-                    console.error('Error loading window model:', error);
-                    reject(error);
+                    if (!isResolved) {
+                        isResolved = true;
+                        clearTimeout(timeoutId);
+                        console.error(`✗ 창문 모델 로딩 실패 (${x}, ${y}, ${z}):`, error);
+                        resolve(); // reject 대신 resolve로 계속 진행
+                    }
                 }
             );
         });
