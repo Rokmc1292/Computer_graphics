@@ -282,10 +282,13 @@ export class Barracks {
     async createChesters() {
         const positions = [
             // 왼쪽 침대들 옆
+            { x: -10.3, y: 0, z: -6, rotationY: Math.PI / 1 },
             { x: -10.3, y: 0, z: -2, rotationY: Math.PI / 1 },
             { x: -10.3, y: 0, z: 2, rotationY: Math.PI / 1 },
             { x: -10.3, y: 0, z: 6, rotationY: Math.PI / 1 },
+            
             // 오른쪽 침대들 옆
+            { x: 10.3, y: 0, z: -6, rotationY: -Math.PI / 0.5 },
             { x: 10.3, y: 0, z: -2, rotationY: -Math.PI / 0.5 },
             { x: 10.3, y: 0, z: 2, rotationY: -Math.PI / 0.5 },
             { x: 10.3, y: 0, z: 6, rotationY: -Math.PI / 0.5 }
@@ -300,10 +303,10 @@ export class Barracks {
      */
     async createWindows() {
         const positions = [
-            [4, 5, 7.9],
-            [7, 5, 7.9],
-            [-4, 5, 7.9],
-            [-7, 5, 7.9]
+            [4.5, 5, 7.9],
+            [8.5, 5, 7.9],
+            [-4.5, 5, 7.9],
+            [-8.5, 5, 7.9]
         ];
 
         // 모든 창문이 로드될 때까지 기다림

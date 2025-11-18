@@ -24,7 +24,7 @@ export class Radiator {
                 // 모델 위치 설정 (TV 옆 바닥)
                 // TV 위치: (0, 4.5, 7.9)
                 // Radiator: TV 옆 바닥에 배치
-                radiatorModel.position.set(-3, 0.5, 7.5);
+                radiatorModel.position.set(8, 8, 8);
 
                 // 그림자 설정
                 radiatorModel.traverse((child) => {

@@ -39,7 +39,9 @@ export class Door {
                         const doorModel = gltf.scene;
 
                         // 모델 위치 설정
-                        doorModel.position.set(0, 2.4, -8);
+                        doorModel.position.set(0, 1, -8);
+                        doorModel.rotation.y = Math.PI/2 ;
+                        doorModel.scale.set(1,5,3);
 
                         // 그림자 설정
                         doorModel.traverse((child) => {

@@ -43,7 +43,8 @@ export class Window {
 
                         // 모델 위치 설정
                         windowModel.position.set(x, y, z);
-                        windowModel.rotation.y = Math.PI / 2;
+                        windowModel.rotation.y = Math.PI ;
+                        windowModel.scale.set(0.8,1,0.1);
 
                         // 그림자 설정
                         windowModel.traverse((child) => {
