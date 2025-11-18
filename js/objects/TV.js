@@ -40,6 +40,7 @@ export class TV {
 
                         // 모델 위치 설정
                         tvModel.position.set(0, 4.5, 7.9);
+                        tvModel.scale.set(5,5,5);
 
                         // 그림자 설정
                         tvModel.traverse((child) => {
