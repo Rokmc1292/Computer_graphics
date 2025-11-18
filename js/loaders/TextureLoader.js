@@ -95,7 +95,7 @@ export class TextureLoaderUtil {
      * @param {number} timeout - 타임아웃 시간 (밀리초)
      * @returns {Promise<THREE.Texture>}
      */
-    loadTexture(path, timeout = 10000) {
+    loadTexture(path, timeout = 30000) {
         return new Promise((resolve, reject) => {
             let isResolved = false;
 
