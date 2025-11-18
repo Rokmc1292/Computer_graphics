@@ -137,17 +137,6 @@ export class TextureLoaderUtil {
     }
 
     /**
-     * 벽 텍스처 로드
-     */
-    async loadWallTextures() {
-        return await this.loadPBRTextures('wall_texture_mapping/textures', {
-            diffuse: 'cracked_concrete_wall_diff_1k.jpg',
-            normal: 'cracked_concrete_wall_nor_gl_1k.jpg',
-            roughness: 'cracked_concrete_wall_rough_1k.jpg'
-        });
-    }
-
-    /**
      * 바닥 텍스처 로드
      */
     async loadFloorTextures() {
