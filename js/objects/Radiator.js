@@ -26,6 +26,7 @@ export class Radiator {
 
                     // 모델 위치 설정
                     radiatorModel.position.set(x, y, z);
+                    radiatorModel.scale.set(5,5,5)
 
                     // 그림자 설정
                     radiatorModel.traverse((child) => {
