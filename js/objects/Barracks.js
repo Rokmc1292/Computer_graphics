@@ -341,11 +341,21 @@ export class Barracks {
     }
 
     /**
-     * 라디에이터 생성
+     * 라디에이터 생성 (2개)
      */
     async createRadiator() {
-        const radiator = new Radiator(this.scene);
-        await radiator.create();
+        const positions = [
+            [6, 0, 7.5],   // 앞벽 오른쪽
+            [-6, 0, 7.5]   // 앞벽 왼쪽
+        ];
+
+        // 모든 라디에이터가 로드될 때까지 기다림
+        const promises = positions.map(pos => {
+            const radiator = new Radiator(this.scene);
+            return radiator.create(...pos);
+        });
+
+        await Promise.all(promises);
         console.log('라디에이터 배치 완료!');
     }
 
