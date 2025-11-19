@@ -13,35 +13,39 @@ export class Radiator {
 
     /**
      * 라디에이터 생성 (GLB 모델 사용)
-     * TV 옆 바닥에 배치
+     * @param {number} x - X 위치
+     * @param {number} y - Y 위치
+     * @param {number} z - Z 위치
      */
-    create() {
-        this.loader.load(
-            'models/radiator.glb',
-            (gltf) => {
-                const radiatorModel = gltf.scene;
+    create(x = 8, y = 0, z = 8) {
+        return new Promise((resolve, reject) => {
+            this.loader.load(
+                'models/radiator.glb',
+                (gltf) => {
+                    const radiatorModel = gltf.scene;
 
-                // 모델 위치 설정 (TV 옆 바닥)
-                // TV 위치: (0, 4.5, 7.9)
-                // Radiator: TV 옆 바닥에 배치
-                radiatorModel.position.set(8, 8, 8);
+                    // 모델 위치 설정
+                    radiatorModel.position.set(x, y, z);
 
-                // 그림자 설정
-                radiatorModel.traverse((child) => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                    }
-                });
+                    // 그림자 설정
+                    radiatorModel.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
 
-                this.scene.add(radiatorModel);
-            },
-            (progress) => {
-                console.log('Radiator loading: ' + (progress.loaded / progress.total * 100) + '%');
-            },
-            (error) => {
-                console.error('Error loading radiator model:', error);
-            }
-        );
+                    this.scene.add(radiatorModel);
+                    resolve();
+                },
+                (progress) => {
+                    console.log('Radiator loading: ' + (progress.loaded / progress.total * 100) + '%');
+                },
+                (error) => {
+                    console.error('Error loading radiator model:', error);
+                    reject(error);
+                }
+            );
+        });
     }
 }
