@@ -18,6 +18,7 @@ class App {
         this.barracks = null;
         this.cameraController = null;
         this.avatarController = null;
+        this.clock = new THREE.Clock(); // 애니메이션을 위한 Clock 추가
     }
 
     /**
@@ -105,10 +106,19 @@ class App {
      */
     animate() {
         requestAnimationFrame(() => this.animate());
-        
+
+        // Delta time 계산
+        const delta = this.clock.getDelta();
+        const elapsed = this.clock.getElapsedTime();
+
         // 아바타 위치 업데이트
         this.avatarController.update();
-        
+
+        // 생활반 애니메이션 업데이트 (아바타 위치 전달)
+        if (this.barracks && this.barracks.update && this.avatar) {
+            this.barracks.update(delta, elapsed, this.avatar.position);
+        }
+
         // 렌더링
         this.sceneManager.render();
     }

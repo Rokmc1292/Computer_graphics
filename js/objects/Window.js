@@ -9,6 +9,8 @@ export class Window {
     constructor(scene) {
         this.scene = scene;
         this.loader = new GLTFLoader();
+        this.windowModel = null;
+        this.glassMaterials = [];
     }
 
     /**
@@ -39,22 +41,32 @@ export class Window {
                         isResolved = true;
                         clearTimeout(timeoutId);
 
-                        const windowModel = gltf.scene;
+                        this.windowModel = gltf.scene;
 
                         // 모델 위치 설정
-                        windowModel.position.set(x, y, z);
-                        windowModel.rotation.y = Math.PI ;
-                        windowModel.scale.set(0.8,1,0.1);
+                        this.windowModel.position.set(x, y, z);
+                        this.windowModel.rotation.y = Math.PI ;
+                        this.windowModel.scale.set(0.8,1,0.1);
 
-                        // 그림자 설정
-                        windowModel.traverse((child) => {
+                        // 그림자 설정 및 유리 재질 찾기
+                        this.windowModel.traverse((child) => {
                             if (child.isMesh) {
                                 child.castShadow = false;
                                 child.receiveShadow = true;
+
+                                // 투명하거나 반투명한 재질을 유리로 간주
+                                if (child.material) {
+                                    if (child.material.transparent || child.material.opacity < 1.0) {
+                                        child.material = child.material.clone();
+                                        child.material.emissive = new THREE.Color(0x87CEEB);
+                                        child.material.emissiveIntensity = 0.0;
+                                        this.glassMaterials.push(child.material);
+                                    }
+                                }
                             }
                         });
 
-                        this.scene.add(windowModel);
+                        this.scene.add(this.windowModel);
                         console.log(`✓ 창문 로드 완료 (${x}, ${y}, ${z})`);
                         resolve();
                     }
@@ -74,6 +86,35 @@ export class Window {
                     }
                 }
             );
+        });
+    }
+
+    /**
+     * 창문 빛 색상 애니메이션 업데이트 (낮/밤 효과)
+     * @param {number} delta - 프레임 간 시간차
+     * @param {number} elapsed - 총 경과 시간
+     */
+    update(delta, elapsed) {
+        if (this.glassMaterials.length === 0) return;
+
+        // 시간에 따른 빛 색상 변화 (낮 -> 저녁 -> 밤)
+        const dayNightCycle = (Math.sin(elapsed * 0.2) * 0.5 + 0.5); // 0~1
+
+        this.glassMaterials.forEach(material => {
+            // 낮: 하늘색, 저녁: 주황색, 밤: 파란색
+            if (dayNightCycle > 0.66) {
+                // 낮 (하늘색)
+                material.emissive.setHSL(0.55, 0.7, 0.6);
+                material.emissiveIntensity = 0.2;
+            } else if (dayNightCycle > 0.33) {
+                // 저녁 (주황색)
+                material.emissive.setHSL(0.08, 1.0, 0.5);
+                material.emissiveIntensity = 0.3;
+            } else {
+                // 밤 (어두운 파란색)
+                material.emissive.setHSL(0.6, 0.5, 0.2);
+                material.emissiveIntensity = 0.1;
+            }
         });
     }
 }

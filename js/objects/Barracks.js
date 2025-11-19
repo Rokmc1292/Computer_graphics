@@ -19,6 +19,16 @@ export class Barracks {
         this.textureLoader = new TextureLoaderUtil();
         this.floorTextures = null;
         this.bedTextures = null;
+
+        // 애니메이션을 위한 객체 참조
+        this.ceilingLights = [];
+        this.tv = null;
+        this.windows = [];
+        this.door = null;
+        this.radiators = [];
+        this.bunkBeds = [];
+        this.ceilingFans = [];
+        this.dustParticles = null;
     }
 
     /**
@@ -58,6 +68,10 @@ export class Barracks {
 
             console.log('>>> 천장 조명 생성 중...');
             this.createCeilingLights();
+            console.log('>>> 천장 선풍기 생성 중...');
+            this.createCeilingFans();
+            console.log('>>> 먼지 파티클 생성 중...');
+            this.createDustParticles();
 
             console.log('>>> Barracks.create() 완료');
         } catch (error) {
@@ -265,6 +279,7 @@ export class Barracks {
         positions.forEach(pos => {
             const bed = new BunkBed(this.scene, this.bedTextures);
             bed.create(...pos);
+            this.bunkBeds.push(bed);
         });
 
         console.log('침대 텍스처 적용 완료');
@@ -315,6 +330,7 @@ export class Barracks {
         // 모든 창문이 로드될 때까지 기다림
         const promises = positions.map(pos => {
             const window = new Window(this.scene);
+            this.windows.push(window);
             return window.create(...pos);
         });
 
@@ -326,8 +342,8 @@ export class Barracks {
      * TV 생성
      */
     async createTV() {
-        const tv = new TV(this.scene);
-        await tv.create();
+        this.tv = new TV(this.scene);
+        await this.tv.create();
         console.log('TV 배치 완료!');
     }
 
@@ -335,8 +351,8 @@ export class Barracks {
      * 출입문 생성
      */
     async createDoor() {
-        const door = new Door(this.scene);
-        await door.create();
+        this.door = new Door(this.scene);
+        await this.door.create();
         console.log('출입문 배치 완료!');
     }
 
@@ -352,6 +368,7 @@ export class Barracks {
         // 모든 라디에이터가 로드될 때까지 기다림
         const promises = positions.map(pos => {
             const radiator = new Radiator(this.scene);
+            this.radiators.push(radiator);
             return radiator.create(...pos);
         });
 
@@ -370,7 +387,7 @@ export class Barracks {
             [0, 7.8, 5]
         ];
 
-        positions.forEach(pos => {
+        positions.forEach((pos, index) => {
             const geometry = new THREE.CylinderGeometry(0.4, 0.4, 0.08);
             const material = new THREE.MeshStandardMaterial({
                 color: 0xFFFFFF,
@@ -382,7 +399,195 @@ export class Barracks {
             const light = new THREE.Mesh(geometry, material);
             light.position.set(...pos);
             light.castShadow = false;  // 조명 자체는 그림자를 만들지 않음
+
+            // 각 조명마다 다른 위상으로 깜빡이도록 설정
+            light.userData.flickerOffset = index * Math.PI / 2;
+
             this.scene.add(light);
+            this.ceilingLights.push(light);
         });
+    }
+
+    /**
+     * 천장 선풍기 생성
+     */
+    createCeilingFans() {
+        const positions = [
+            [-3, 7.5, -3],
+            [3, 7.5, -3],
+            [-3, 7.5, 3],
+            [3, 7.5, 3]
+        ];
+
+        positions.forEach(pos => {
+            const fanGroup = new THREE.Group();
+
+            // 선풍기 모터 (중앙)
+            const motorGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.2);
+            const motorMaterial = new THREE.MeshStandardMaterial({
+                color: 0x404040,
+                roughness: 0.4,
+                metalness: 0.8
+            });
+            const motor = new THREE.Mesh(motorGeometry, motorMaterial);
+            motor.castShadow = true;
+            fanGroup.add(motor);
+
+            // 선풍기 날개 (3개)
+            const bladeGeometry = new THREE.BoxGeometry(1.5, 0.02, 0.2);
+            const bladeMaterial = new THREE.MeshStandardMaterial({
+                color: 0xE0E0E0,
+                roughness: 0.3,
+                metalness: 0.6
+            });
+
+            for (let i = 0; i < 3; i++) {
+                const blade = new THREE.Mesh(bladeGeometry, bladeMaterial);
+                blade.rotation.y = (i * Math.PI * 2) / 3; // 120도씩 회전
+                blade.position.x = Math.cos(blade.rotation.y) * 0.4;
+                blade.position.z = Math.sin(blade.rotation.y) * 0.4;
+                blade.castShadow = true;
+                fanGroup.add(blade);
+            }
+
+            fanGroup.position.set(...pos);
+            this.scene.add(fanGroup);
+            this.ceilingFans.push(fanGroup);
+        });
+    }
+
+    /**
+     * 먼지 파티클 시스템 생성
+     */
+    createDustParticles() {
+        const particleCount = 200;
+        const particles = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const velocities = new Float32Array(particleCount * 3);
+
+        // 파티클 초기 위치와 속도 설정
+        for (let i = 0; i < particleCount; i++) {
+            const i3 = i * 3;
+            // 방 전체에 랜덤 배치
+            positions[i3] = (Math.random() - 0.5) * 18; // X: -9 ~ 9
+            positions[i3 + 1] = Math.random() * 7 + 0.5; // Y: 0.5 ~ 7.5
+            positions[i3 + 2] = (Math.random() - 0.5) * 14; // Z: -7 ~ 7
+
+            // 느리게 떠다니는 속도
+            velocities[i3] = (Math.random() - 0.5) * 0.05;
+            velocities[i3 + 1] = (Math.random() - 0.5) * 0.03; // Y축은 더 느리게
+            velocities[i3 + 2] = (Math.random() - 0.5) * 0.05;
+        }
+
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particles.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+
+        // 파티클 재질
+        const particleMaterial = new THREE.PointsMaterial({
+            color: 0xCCCCCC,
+            size: 0.02,
+            opacity: 0.3,
+            transparent: true,
+            sizeAttenuation: true
+        });
+
+        this.dustParticles = new THREE.Points(particles, particleMaterial);
+        this.scene.add(this.dustParticles);
+    }
+
+    /**
+     * 애니메이션 업데이트
+     * @param {number} delta - 프레임 간 시간차
+     * @param {number} elapsed - 총 경과 시간
+     * @param {THREE.Vector3} avatarPosition - 아바타 위치
+     */
+    update(delta, elapsed, avatarPosition = null) {
+        // 1. 천장 조명 깜빡임 애니메이션
+        this.ceilingLights.forEach(light => {
+            const offset = light.userData.flickerOffset || 0;
+            // 형광등 깜빡임 효과 (미세하고 불규칙)
+            const fastFlicker = Math.sin(elapsed * 60 + offset) * 0.05;
+            const slowPulse = Math.sin(elapsed * 0.5 + offset) * 0.1;
+            const random = (Math.random() - 0.5) * 0.02; // 랜덤 노이즈
+
+            light.material.emissiveIntensity = 2.0 + fastFlicker + slowPulse + random;
+        });
+
+        // 2. TV 화면 애니메이션
+        if (this.tv && this.tv.update) {
+            this.tv.update(delta, elapsed);
+        }
+
+        // 3. 라디에이터 열기 효과
+        this.radiators.forEach(radiator => {
+            if (radiator && radiator.update) {
+                radiator.update(delta, elapsed);
+            }
+        });
+
+        // 4. 창문 빛 색상 변화
+        this.windows.forEach(window => {
+            if (window && window.update) {
+                window.update(delta, elapsed);
+            }
+        });
+
+        // 5. 침대 이불 흔들림 효과
+        this.bunkBeds.forEach(bed => {
+            if (bed && bed.update) {
+                bed.update(delta, elapsed);
+            }
+        });
+
+        // 6. 문 여닫기 (아바타 위치 필요)
+        if (this.door && this.door.update && avatarPosition) {
+            this.door.update(delta, elapsed, avatarPosition);
+        }
+
+        // 7. 체스터 서랍 열고 닫기
+        if (this.chester && this.chester.update) {
+            this.chester.update(delta, elapsed);
+        }
+
+        // 8. 천장 선풍기 회전
+        this.ceilingFans.forEach(fan => {
+            fan.rotation.y += delta * 5; // 빠르게 회전
+        });
+
+        // 9. 먼지 파티클 이동
+        if (this.dustParticles) {
+            const positions = this.dustParticles.geometry.attributes.position.array;
+            const velocities = this.dustParticles.geometry.attributes.velocity.array;
+
+            for (let i = 0; i < positions.length; i += 3) {
+                // 속도에 따라 위치 업데이트
+                positions[i] += velocities[i] * delta * 10;
+                positions[i + 1] += velocities[i + 1] * delta * 10;
+                positions[i + 2] += velocities[i + 2] * delta * 10;
+
+                // 경계 체크 및 리셋
+                if (positions[i] < -10 || positions[i] > 10) {
+                    positions[i] = (Math.random() - 0.5) * 18;
+                }
+                if (positions[i + 1] < 0 || positions[i + 1] > 8) {
+                    positions[i + 1] = Math.random() * 7 + 0.5;
+                }
+                if (positions[i + 2] < -8 || positions[i + 2] > 8) {
+                    positions[i + 2] = (Math.random() - 0.5) * 14;
+                }
+
+                // 미세한 속도 변화 (브라운 운동 효과)
+                velocities[i] += (Math.random() - 0.5) * 0.001;
+                velocities[i + 1] += (Math.random() - 0.5) * 0.001;
+                velocities[i + 2] += (Math.random() - 0.5) * 0.001;
+
+                // 속도 제한
+                velocities[i] = Math.max(-0.05, Math.min(0.05, velocities[i]));
+                velocities[i + 1] = Math.max(-0.03, Math.min(0.03, velocities[i + 1]));
+                velocities[i + 2] = Math.max(-0.05, Math.min(0.05, velocities[i + 2]));
+            }
+
+            this.dustParticles.geometry.attributes.position.needsUpdate = true;
+        }
     }
 }
