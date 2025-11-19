@@ -9,6 +9,7 @@ import { Chester } from './Chester.js';
 import { Window } from './Window.js';
 import { TV } from './TV.js';
 import { Door } from './Door.js';
+import { Radiator } from './Radiator.js';
 import { TextureLoaderUtil } from '../loaders/TextureLoader.js';
 
 export class Barracks {
@@ -52,6 +53,8 @@ export class Barracks {
             await this.createTV(); // 비동기로 TV 생성
             console.log('>>> 문 생성 중...');
             await this.createDoor(); // 비동기로 문 생성
+            console.log('>>> 라디에이터 생성 중...');
+            await this.createRadiator(); // 비동기로 라디에이터 생성
 
             console.log('>>> 천장 조명 생성 중...');
             this.createCeilingLights();
@@ -335,6 +338,15 @@ export class Barracks {
         const door = new Door(this.scene);
         await door.create();
         console.log('출입문 배치 완료!');
+    }
+
+    /**
+     * 라디에이터 생성
+     */
+    async createRadiator() {
+        const radiator = new Radiator(this.scene);
+        await radiator.create();
+        console.log('라디에이터 배치 완료!');
     }
 
     /**
