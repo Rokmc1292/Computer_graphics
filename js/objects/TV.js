@@ -98,13 +98,13 @@ export class TV {
     update(delta, elapsed) {
         if (!this.screenMaterial) return;
 
-        // 채널 변경 효과: 색상이 천천히 변화
+        // 채널 변경 효과: 색상이 천천히 변화 (더 다양한 색상)
         const hue = (Math.sin(elapsed * 0.3) * 0.5 + 0.5); // 0~1 사이
-        this.screenMaterial.emissive.setHSL(hue * 0.7, 0.8, 0.5); // 다양한 색상
+        this.screenMaterial.emissive.setHSL(hue, 1.0, 0.5); // 채도를 1.0으로 높임
 
-        // 밝기 변화 (미세한 깜빡임)
-        const flicker = Math.sin(elapsed * 10) * 0.1; // 빠른 깜빡임
-        const slow = Math.sin(elapsed * 0.5) * 0.3; // 느린 변화
-        this.screenMaterial.emissiveIntensity = 0.5 + flicker + slow;
+        // 밝기 변화 (더 강한 깜빡임)
+        const flicker = Math.sin(elapsed * 10) * 0.2; // 빠른 깜빡임
+        const slow = Math.sin(elapsed * 0.5) * 0.5; // 느린 변화
+        this.screenMaterial.emissiveIntensity = 1.5 + flicker + slow; // 기본 밝기를 높임
     }
 }

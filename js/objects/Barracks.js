@@ -10,6 +10,7 @@ import { Window } from './Window.js';
 import { TV } from './TV.js';
 import { Door } from './Door.js';
 import { Radiator } from './Radiator.js';
+import { CeilingFan } from './CeilingFan.js';
 import { TextureLoaderUtil } from '../loaders/TextureLoader.js';
 
 export class Barracks {
@@ -27,7 +28,7 @@ export class Barracks {
         this.door = null;
         this.radiators = [];
         this.bunkBeds = [];
-        this.ceilingFans = [];
+        this.ceilingFan = null;
         this.dustParticles = null;
     }
 
@@ -69,7 +70,7 @@ export class Barracks {
             console.log('>>> 천장 조명 생성 중...');
             this.createCeilingLights();
             console.log('>>> 천장 선풍기 생성 중...');
-            this.createCeilingFans();
+            await this.createCeilingFan();
             console.log('>>> 먼지 파티클 생성 중...');
             this.createDustParticles();
 
@@ -187,11 +188,30 @@ export class Barracks {
         frontWall.castShadow = true;
         this.scene.add(frontWall);
 
-        // 뒷벽
-        const backWall = new THREE.Mesh(
-            new THREE.PlaneGeometry(20, 8),
-            material
-        );
+        // 뒷벽 (문 구멍 포함)
+        // Shape로 벽 외곽 생성 (중심이 (0, 0)인 좌표계)
+        const wallShape = new THREE.Shape();
+        wallShape.moveTo(-10, -4); // 왼쪽 아래
+        wallShape.lineTo(10, -4);   // 오른쪽 아래
+        wallShape.lineTo(10, 4);    // 오른쪽 위
+        wallShape.lineTo(-10, 4);   // 왼쪽 위
+        wallShape.lineTo(-10, -4);  // 다시 왼쪽 아래로
+
+        // 문 구멍 (Path) - 문 크기: 1m x 2m
+        const doorHole = new THREE.Path();
+        doorHole.moveTo(-0.5, -4);      // 문 왼쪽 아래 (바닥부터)
+        doorHole.lineTo(0.5, -4);       // 문 오른쪽 아래
+        doorHole.lineTo(0.5, -2);       // 문 오른쪽 위 (높이 2m)
+        doorHole.lineTo(-0.5, -2);      // 문 왼쪽 위
+        doorHole.lineTo(-0.5, -4);      // 다시 왼쪽 아래로
+
+        // Shape에 hole 추가
+        wallShape.holes.push(doorHole);
+
+        // ShapeGeometry로 변환
+        const backWallGeometry = new THREE.ShapeGeometry(wallShape);
+
+        const backWall = new THREE.Mesh(backWallGeometry, material);
         backWall.position.set(0, 4, -8);
         backWall.rotation.y = Math.PI;
         backWall.receiveShadow = true;
@@ -409,51 +429,12 @@ export class Barracks {
     }
 
     /**
-     * 천장 선풍기 생성
+     * 천장 선풍기 생성 (GLB 모델 사용)
      */
-    createCeilingFans() {
-        const positions = [
-            [-3, 7.5, -3],
-            [3, 7.5, -3],
-            [-3, 7.5, 3],
-            [3, 7.5, 3]
-        ];
-
-        positions.forEach(pos => {
-            const fanGroup = new THREE.Group();
-
-            // 선풍기 모터 (중앙)
-            const motorGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.2);
-            const motorMaterial = new THREE.MeshStandardMaterial({
-                color: 0x404040,
-                roughness: 0.4,
-                metalness: 0.8
-            });
-            const motor = new THREE.Mesh(motorGeometry, motorMaterial);
-            motor.castShadow = true;
-            fanGroup.add(motor);
-
-            // 선풍기 날개 (3개)
-            const bladeGeometry = new THREE.BoxGeometry(1.5, 0.02, 0.2);
-            const bladeMaterial = new THREE.MeshStandardMaterial({
-                color: 0xE0E0E0,
-                roughness: 0.3,
-                metalness: 0.6
-            });
-
-            for (let i = 0; i < 3; i++) {
-                const blade = new THREE.Mesh(bladeGeometry, bladeMaterial);
-                blade.rotation.y = (i * Math.PI * 2) / 3; // 120도씩 회전
-                blade.position.x = Math.cos(blade.rotation.y) * 0.4;
-                blade.position.z = Math.sin(blade.rotation.y) * 0.4;
-                blade.castShadow = true;
-                fanGroup.add(blade);
-            }
-
-            fanGroup.position.set(...pos);
-            this.scene.add(fanGroup);
-            this.ceilingFans.push(fanGroup);
-        });
+    async createCeilingFan() {
+        this.ceilingFan = new CeilingFan(this.scene);
+        await this.ceilingFan.create(0, 7.5, 0); // 천장 중앙에 배치
+        console.log('천장 선풍기 배치 완료!');
     }
 
     /**
@@ -550,9 +531,9 @@ export class Barracks {
         }
 
         // 8. 천장 선풍기 회전
-        this.ceilingFans.forEach(fan => {
-            fan.rotation.y += delta * 5; // 빠르게 회전
-        });
+        if (this.ceilingFan && this.ceilingFan.update) {
+            this.ceilingFan.update(delta);
+        }
 
         // 9. 먼지 파티클 이동
         if (this.dustParticles) {
