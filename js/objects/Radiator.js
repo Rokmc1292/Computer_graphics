@@ -9,6 +9,8 @@ export class Radiator {
     constructor(scene) {
         this.scene = scene;
         this.loader = new GLTFLoader();
+        this.radiatorModel = null;
+        this.radiatorMaterial = null;
     }
 
     /**
@@ -22,21 +24,29 @@ export class Radiator {
             this.loader.load(
                 'models/radiator.glb',
                 (gltf) => {
-                    const radiatorModel = gltf.scene;
+                    this.radiatorModel = gltf.scene;
 
                     // 모델 위치 설정
-                    radiatorModel.position.set(x, y, z);
-                    radiatorModel.scale.set(5,5,5)
+                    this.radiatorModel.position.set(x, y, z);
+                    this.radiatorModel.scale.set(5,5,5)
 
-                    // 그림자 설정
-                    radiatorModel.traverse((child) => {
+                    // 그림자 설정 및 발열 재질 추가
+                    this.radiatorModel.traverse((child) => {
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
+
+                            // 라디에이터 메인 메시에 발열 효과 추가
+                            if (!this.radiatorMaterial && child.material) {
+                                child.material = child.material.clone();
+                                child.material.emissive = new THREE.Color(0xFF4400);
+                                child.material.emissiveIntensity = 0.0;
+                                this.radiatorMaterial = child.material;
+                            }
                         }
                     });
 
-                    this.scene.add(radiatorModel);
+                    this.scene.add(this.radiatorModel);
                     resolve();
                 },
                 (progress) => {
@@ -48,5 +58,22 @@ export class Radiator {
                 }
             );
         });
+    }
+
+    /**
+     * 라디에이터 열기 애니메이션 업데이트
+     * @param {number} delta - 프레임 간 시간차
+     * @param {number} elapsed - 총 경과 시간
+     */
+    update(delta, elapsed) {
+        if (!this.radiatorMaterial) return;
+
+        // 열기 강도 변화 (느리게 숨쉬듯이)
+        const heatIntensity = (Math.sin(elapsed * 0.5) * 0.5 + 0.5); // 0~1
+        this.radiatorMaterial.emissiveIntensity = heatIntensity * 0.3;
+
+        // 색상도 약간 변화 (주황색에서 빨강색으로)
+        const hue = 0.05 - (heatIntensity * 0.02); // 주황~빨강
+        this.radiatorMaterial.emissive.setHSL(hue, 1.0, 0.5);
     }
 }

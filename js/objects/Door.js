@@ -9,6 +9,10 @@ export class Door {
     constructor(scene) {
         this.scene = scene;
         this.loader = new GLTFLoader();
+        this.doorModel = null;
+        this.isOpen = false;
+        this.targetRotation = 0;
+        this.currentRotation = 0;
     }
 
     /**
@@ -36,22 +40,22 @@ export class Door {
                         isResolved = true;
                         clearTimeout(timeoutId);
 
-                        const doorModel = gltf.scene;
+                        this.doorModel = gltf.scene;
 
                         // 모델 위치 설정
-                        doorModel.position.set(0, 1, -8);
-                        doorModel.rotation.y = Math.PI/2 ;
-                        doorModel.scale.set(1,5,3);
+                        this.doorModel.position.set(0, 1, -8);
+                        this.doorModel.rotation.y = Math.PI/2 ;
+                        this.doorModel.scale.set(1,5,3);
 
                         // 그림자 설정
-                        doorModel.traverse((child) => {
+                        this.doorModel.traverse((child) => {
                             if (child.isMesh) {
                                 child.castShadow = true;
                                 child.receiveShadow = true;
                             }
                         });
 
-                        this.scene.add(doorModel);
+                        this.scene.add(this.doorModel);
                         console.log('✓ 출입문 모델 로드 완료');
                         resolve();
                     }
@@ -72,5 +76,36 @@ export class Door {
                 }
             );
         });
+    }
+
+    /**
+     * 문 여닫기 애니메이션 업데이트
+     * @param {number} delta - 프레임 간 시간차
+     * @param {number} elapsed - 총 경과 시간
+     * @param {THREE.Vector3} avatarPosition - 아바타 위치
+     */
+    update(delta, elapsed, avatarPosition) {
+        if (!this.doorModel) return;
+
+        // 아바타와 문 사이의 거리 계산
+        const doorPosition = this.doorModel.position.clone();
+        const distance = avatarPosition.distanceTo(doorPosition);
+
+        // 거리가 3 이하면 문 열기, 아니면 닫기
+        const shouldOpen = distance < 3;
+
+        if (shouldOpen && !this.isOpen) {
+            this.isOpen = true;
+            this.targetRotation = Math.PI / 2; // 90도 열림
+        } else if (!shouldOpen && this.isOpen) {
+            this.isOpen = false;
+            this.targetRotation = 0; // 닫힘
+        }
+
+        // 부드럽게 회전 (lerp)
+        this.currentRotation += (this.targetRotation - this.currentRotation) * delta * 3;
+
+        // 문의 회전 적용 (Y축 회전에 추가)
+        this.doorModel.rotation.y = Math.PI / 2 + this.currentRotation;
     }
 }

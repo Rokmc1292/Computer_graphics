@@ -8,6 +8,7 @@ export class BunkBed {
     constructor(scene, bedTextures = null) {
         this.scene = scene;
         this.bedTextures = bedTextures;
+        this.beddingMeshes = []; // 이불 메시 저장
     }
 
     /**
@@ -225,6 +226,7 @@ export class BunkBed {
         lowerBedding.castShadow = true;
         lowerBedding.receiveShadow = true;
         group.add(lowerBedding);
+        this.beddingMeshes.push(lowerBedding);
 
         // 위층 이불
         const upperBedding = new THREE.Mesh(
@@ -235,6 +237,7 @@ export class BunkBed {
         upperBedding.castShadow = true;
         upperBedding.receiveShadow = true;
         group.add(upperBedding);
+        this.beddingMeshes.push(upperBedding);
     }
 
     /**
@@ -328,5 +331,26 @@ export class BunkBed {
         const upperSupport2 = new THREE.Mesh(geometry, material);
         upperSupport2.position.set(0, 1.9, 0.9);
         group.add(upperSupport2);
+    }
+
+    /**
+     * 이불 흔들림 애니메이션 업데이트
+     * @param {number} delta - 프레임 간 시간차
+     * @param {number} elapsed - 총 경과 시간
+     */
+    update(delta, elapsed) {
+        this.beddingMeshes.forEach((bedding, index) => {
+            if (bedding.material.map) {
+                // 텍스처 UV 오프셋 변경으로 바람에 흔들리는 효과
+                const offset = index * Math.PI / 4;
+                bedding.material.map.offset.x = Math.sin(elapsed * 0.5 + offset) * 0.02;
+                bedding.material.map.offset.y = Math.cos(elapsed * 0.3 + offset) * 0.01;
+                bedding.material.map.needsUpdate = true;
+            }
+
+            // 미세한 높이 변화 (숨쉬는 효과)
+            const breathe = Math.sin(elapsed * 0.8 + index) * 0.005;
+            bedding.position.y = (index % 2 === 0 ? 0.8 : 2.4) + breathe;
+        });
     }
 }
