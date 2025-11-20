@@ -19,7 +19,7 @@ export class CeilingFan {
      * @param {number} z - Z 위치
      * @returns {Promise} 모델 로딩 완료 Promise
      */
-    create(x = 0, y = 7.5, z = 0) {
+    create(x, y, z) {
         return new Promise((resolve, reject) => {
             let isResolved = false;
             const timeout = 30000; // 30초 타임아웃
@@ -44,7 +44,8 @@ export class CeilingFan {
 
                         // 모델 위치 설정
                         this.fanModel.position.set(x, y, z);
-                        this.fanModel.scale.set(3, 3, 3); // 스케일 증가
+                        this.fanModel.scale.set(1,1,1); // 스케일 증가
+                        this.fanModel.rotation.set(0, 0, 0);
 
                         // 그림자 설정
                         this.fanModel.traverse((child) => {

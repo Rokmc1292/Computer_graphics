@@ -199,11 +199,11 @@ export class Barracks {
 
         // 문 구멍 (Path) - 문 크기: 3m x 5m (Door 스케일과 일치)
         const doorHole = new THREE.Path();
-        doorHole.moveTo(-1.6, -3.2);    // 문 왼쪽 아래 (실제 Y=0.8m)
-        doorHole.lineTo(1.6, -3.2);     // 문 오른쪽 아래
-        doorHole.lineTo(1.6, 2.2);      // 문 오른쪽 위 (실제 Y=6.2m)
-        doorHole.lineTo(-1.6, 2.2);     // 문 왼쪽 위
-        doorHole.lineTo(-1.6, -3.2);    // 다시 왼쪽 아래로
+        doorHole.moveTo(-1.8, -3.8);    // 문 왼쪽 아래 (실제 Y=0.8m)
+        doorHole.lineTo(1.3, -3.8);     // 문 오른쪽 아래
+        doorHole.lineTo(1.3, 1.6);      // 문 오른쪽 위 (실제 Y=6.2m)
+        doorHole.lineTo(-1.3, 1.6);     // 문 왼쪽 위
+        doorHole.lineTo(-1.3, -4.8);    // 다시 왼쪽 아래로
 
         // Shape에 hole 추가
         wallShape.holes.push(doorHole);
@@ -433,7 +433,7 @@ export class Barracks {
      */
     async createCeilingFan() {
         this.ceilingFan = new CeilingFan(this.scene);
-        await this.ceilingFan.create(0, 7.5, 0); // 천장 중앙에 배치
+        await this.ceilingFan.create(0, 0, 0); // 천장 중앙에 배치
         console.log('천장 선풍기 배치 완료!');
     }
 
