@@ -433,7 +433,7 @@ export class Barracks {
      */
     async createCeilingFan() {
         this.ceilingFan = new CeilingFan(this.scene);
-        await this.ceilingFan.create(0, 0, 0); // 천장 중앙에 배치
+        await this.ceilingFan.create(0, 7, 0); // 천장 높이에 배치 (y=7)
         console.log('천장 선풍기 배치 완료!');
     }
 
