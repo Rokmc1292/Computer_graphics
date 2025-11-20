@@ -44,7 +44,7 @@ export class CeilingFan {
 
                         // 모델 위치 설정
                         this.fanModel.position.set(x, y, z);
-                        this.fanModel.scale.set(1, 1, 1);
+                        this.fanModel.scale.set(3, 3, 3); // 스케일 증가
 
                         // 그림자 설정
                         this.fanModel.traverse((child) => {
