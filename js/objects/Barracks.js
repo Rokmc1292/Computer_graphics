@@ -525,17 +525,12 @@ export class Barracks {
             this.door.update(delta, elapsed, avatarPosition);
         }
 
-        // 7. 체스터 서랍 열고 닫기
-        if (this.chester && this.chester.update) {
-            this.chester.update(delta, elapsed);
-        }
-
-        // 8. 천장 선풍기 회전
+        // 7. 천장 선풍기 회전
         if (this.ceilingFan && this.ceilingFan.update) {
             this.ceilingFan.update(delta);
         }
 
-        // 9. 먼지 파티클 이동
+        // 8. 먼지 파티클 이동
         if (this.dustParticles) {
             const positions = this.dustParticles.geometry.attributes.position.array;
             const velocities = this.dustParticles.geometry.attributes.velocity.array;
