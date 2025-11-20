@@ -197,13 +197,13 @@ export class Barracks {
         wallShape.lineTo(-10, 4);   // 왼쪽 위
         wallShape.lineTo(-10, -4);  // 다시 왼쪽 아래로
 
-        // 문 구멍 (Path) - 문 크기: 1m x 2m
+        // 문 구멍 (Path) - 문 크기: 3m x 5m (Door 스케일과 일치)
         const doorHole = new THREE.Path();
-        doorHole.moveTo(-0.5, -4);      // 문 왼쪽 아래 (바닥부터)
-        doorHole.lineTo(0.5, -4);       // 문 오른쪽 아래
-        doorHole.lineTo(0.5, -2);       // 문 오른쪽 위 (높이 2m)
-        doorHole.lineTo(-0.5, -2);      // 문 왼쪽 위
-        doorHole.lineTo(-0.5, -4);      // 다시 왼쪽 아래로
+        doorHole.moveTo(-1.6, -3.2);    // 문 왼쪽 아래 (실제 Y=0.8m)
+        doorHole.lineTo(1.6, -3.2);     // 문 오른쪽 아래
+        doorHole.lineTo(1.6, 2.2);      // 문 오른쪽 위 (실제 Y=6.2m)
+        doorHole.lineTo(-1.6, 2.2);     // 문 왼쪽 위
+        doorHole.lineTo(-1.6, -3.2);    // 다시 왼쪽 아래로
 
         // Shape에 hole 추가
         wallShape.holes.push(doorHole);
