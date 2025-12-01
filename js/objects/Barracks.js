@@ -11,6 +11,9 @@ import { TV } from './TV.js';
 import { Door } from './Door.js';
 import { Radiator } from './Radiator.js';
 import { CeilingFan } from './CeilingFan.js';
+import { LightSwitch } from './LightSwitch.js';
+import { DecorativeCurve } from './DecorativeCurve.js';
+import { Vase } from './Vase.js';
 import { TextureLoaderUtil } from '../loaders/TextureLoader.js';
 
 export class Barracks {
@@ -30,6 +33,10 @@ export class Barracks {
         this.bunkBeds = [];
         this.ceilingFan = null;
         this.dustParticles = null;
+        this.lightSwitch = null;
+        this.lightsEnabled = true; // 조명 상태
+        this.decorativeCurves = [];
+        this.vases = [];
     }
 
     /**
@@ -73,6 +80,12 @@ export class Barracks {
             await this.createCeilingFan();
             console.log('>>> 먼지 파티클 생성 중...');
             this.createDustParticles();
+            console.log('>>> 조명 스위치 생성 중...');
+            this.createLightSwitch();
+            console.log('>>> 장식용 Bezier Curve 생성 중...');
+            this.createDecorativeCurves();
+            console.log('>>> 화병/컵 객체 생성 중 (LatheGeometry)...');
+            this.createVases();
 
             console.log('>>> Barracks.create() 완료');
         } catch (error) {
@@ -438,6 +451,110 @@ export class Barracks {
     }
 
     /**
+     * 조명 스위치 생성 (문 옆 벽에 배치)
+     */
+    createLightSwitch() {
+        this.lightSwitch = new LightSwitch(this.scene);
+        // 문 옆 벽에 스위치 배치 (문 오른쪽)
+        this.lightSwitch.create(2.5, 1.5, -7.9);
+        console.log('조명 스위치 배치 완료!');
+    }
+
+    /**
+     * 장식용 Bezier Curve 생성
+     * 벽이나 공중에 장식 곡선 배치
+     */
+    createDecorativeCurves() {
+        // 앞벽에 장식 곡선 패턴 (금색 트림)
+        const curve1 = new DecorativeCurve(this.scene);
+        curve1.createMultiple([
+            {
+                controlPoints: [
+                    [-8, 7, 7.8],   // 시작점 (왼쪽 위)
+                    [-4, 7.5, 7.8], // 제어점 1
+                    [4, 7.5, 7.8],  // 제어점 2
+                    [8, 7, 7.8]     // 끝점 (오른쪽 위)
+                ],
+                color: 0xFFD700,
+                radius: 0.03
+            },
+            {
+                controlPoints: [
+                    [-8, 6.5, 7.8],
+                    [-4, 7, 7.8],
+                    [4, 7, 7.8],
+                    [8, 6.5, 7.8]
+                ],
+                color: 0xFFD700,
+                radius: 0.02
+            }
+        ]);
+        this.decorativeCurves.push(curve1);
+
+        // 공중에 떠있는 장식 곡선 (청색 네온)
+        const curve2 = new DecorativeCurve(this.scene);
+        curve2.create(
+            [
+                [-6, 4, 3],    // 시작
+                [-3, 5, 0],    // 제어점 1
+                [3, 5, 0],     // 제어점 2
+                [6, 4, -3]     // 끝
+            ],
+            0x00BFFF,  // 청색
+            0.04
+        );
+        this.decorativeCurves.push(curve2);
+
+        console.log('장식용 Bezier Curve 배치 완료!');
+    }
+
+    /**
+     * 화병/컵 객체 생성 (LatheGeometry)
+     * 체스터 위에 배치
+     */
+    createVases() {
+        // 화병 3개 (왼쪽 체스터 위)
+        const vase1 = new Vase(this.scene);
+        vase1.create(-10, 1, -5.5, 'vase');
+        this.vases.push(vase1);
+
+        const vase2 = new Vase(this.scene);
+        vase2.create(-10, 1, 2, 'bottle');
+        this.vases.push(vase2);
+
+        // 컵 2개 (오른쪽 체스터 위)
+        const cup1 = new Vase(this.scene);
+        cup1.create(10, 1, -5.5, 'cup');
+        this.vases.push(cup1);
+
+        const cup2 = new Vase(this.scene);
+        cup2.create(10, 1, 6, 'vase');
+        this.vases.push(cup2);
+
+        console.log('화병/컵 객체 배치 완료! (LatheGeometry)');
+    }
+
+    /**
+     * 조명 토글 (켜기/끄기)
+     */
+    toggleLights() {
+        if (this.lightSwitch) {
+            this.lightsEnabled = this.lightSwitch.toggle();
+
+            // 조명 상태에 따라 emissiveIntensity 조절
+            this.ceilingLights.forEach(light => {
+                if (this.lightsEnabled) {
+                    // 조명 켜짐: 원래 밝기로
+                    light.material.emissive.setHex(0xFFEEDD);
+                } else {
+                    // 조명 꺼짐: 어둡게
+                    light.material.emissive.setHex(0x000000);
+                }
+            });
+        }
+    }
+
+    /**
      * 먼지 파티클 시스템 생성
      */
     createDustParticles() {
@@ -483,16 +600,23 @@ export class Barracks {
      * @param {THREE.Vector3} avatarPosition - 아바타 위치
      */
     update(delta, elapsed, avatarPosition = null) {
-        // 1. 천장 조명 깜빡임 애니메이션
-        this.ceilingLights.forEach(light => {
-            const offset = light.userData.flickerOffset || 0;
-            // 형광등 깜빡임 효과 (미세하고 불규칙)
-            const fastFlicker = Math.sin(elapsed * 60 + offset) * 0.05;
-            const slowPulse = Math.sin(elapsed * 0.5 + offset) * 0.1;
-            const random = (Math.random() - 0.5) * 0.02; // 랜덤 노이즈
+        // 1. 천장 조명 깜빡임 애니메이션 (조명이 켜져 있을 때만)
+        if (this.lightsEnabled) {
+            this.ceilingLights.forEach(light => {
+                const offset = light.userData.flickerOffset || 0;
+                // 형광등 깜빡임 효과 (미세하고 불규칙)
+                const fastFlicker = Math.sin(elapsed * 60 + offset) * 0.05;
+                const slowPulse = Math.sin(elapsed * 0.5 + offset) * 0.1;
+                const random = (Math.random() - 0.5) * 0.02; // 랜덤 노이즈
 
-            light.material.emissiveIntensity = 2.0 + fastFlicker + slowPulse + random;
-        });
+                light.material.emissiveIntensity = 2.0 + fastFlicker + slowPulse + random;
+            });
+        } else {
+            // 조명이 꺼져 있으면 emissiveIntensity를 0으로
+            this.ceilingLights.forEach(light => {
+                light.material.emissiveIntensity = 0;
+            });
+        }
 
         // 2. TV 화면 애니메이션
         if (this.tv && this.tv.update) {
