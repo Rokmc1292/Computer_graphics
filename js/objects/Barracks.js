@@ -491,20 +491,6 @@ export class Barracks {
         ]);
         this.decorativeCurves.push(curve1);
 
-        // 공중에 떠있는 장식 곡선 (청색 네온)
-        const curve2 = new DecorativeCurve(this.scene);
-        curve2.create(
-            [
-                [-6, 4, 3],    // 시작
-                [-3, 5, 0],    // 제어점 1
-                [3, 5, 0],     // 제어점 2
-                [6, 4, -3]     // 끝
-            ],
-            0x00BFFF,  // 청색
-            0.04
-        );
-        this.decorativeCurves.push(curve2);
-
         console.log('장식용 Bezier Curve 배치 완료!');
     }
 
