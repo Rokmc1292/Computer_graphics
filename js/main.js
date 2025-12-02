@@ -9,6 +9,7 @@ import { Avatar } from './objects/Avatar.js';
 import { Barracks } from './objects/Barracks.js';
 import { CameraController } from './controls/CameraController.js';
 import { AvatarController } from './controls/AvatarController.js';
+import { InteractionController } from './controls/InteractionController.js';
 
 class App {
     constructor() {
@@ -18,6 +19,7 @@ class App {
         this.barracks = null;
         this.cameraController = null;
         this.avatarController = null;
+        this.interactionController = null;
         this.clock = new THREE.Clock(); // 애니메이션을 위한 Clock 추가
     }
 
@@ -68,8 +70,28 @@ class App {
             );
             console.log('✓ 아바타 컨트롤러 생성 완료');
 
+            // 상호작용 컨트롤러 생성 (클릭 감지)
+            console.log('7. 상호작용 컨트롤러 생성 중...');
+            this.interactionController = new InteractionController(
+                this.sceneManager.camera,
+                this.sceneManager.renderer.domElement
+            );
+
+            // 조명 스위치 버튼을 클릭 가능한 객체로 등록
+            if (this.barracks.lightSwitch) {
+                const switchButton = this.barracks.lightSwitch.getButton();
+                if (switchButton) {
+                    // 클릭 시 조명 토글
+                    switchButton.userData.onClick = () => {
+                        this.barracks.toggleLights();
+                    };
+                    this.interactionController.addInteractable(switchButton);
+                }
+            }
+            console.log('✓ 상호작용 컨트롤러 생성 완료');
+
             // 애니메이션 시작
-            console.log('7. 애니메이션 시작...');
+            console.log('8. 애니메이션 시작...');
             this.animate();
             console.log('✓ 애니메이션 시작 완료');
 
